@@ -1,0 +1,33 @@
+language: python
+dist: xenial
+sudo: true
+python:
+- '3.7'
+- '3.8'
+before_install:
+- ./scripts/install-protobuf.sh
+- export PATH=$PATH:$PWD/bin/
+install:
+- python setup.py install
+before_script:
+- pip install nox
+script:
+- nox
+stages:
+- test
+- name: deploy
+  if: branch = master
+jobs:
+  include:
+  - stage: test
+  - stage: deploy
+    python: '3.7'
+    script: skip
+    deploy:
+      provider: pypi
+      username: '__token__'
+      password:
+        secure: "06XT/R+9A415XueWJ3LsTqlIgUvBVK5YRUQleqOLaLRJRAtW8nuXc3S6fn5Z3PN7PT4U96gUFZycMhOZ8+1+KWOHEbjdC+LO8xznc1ZE7fjbY5JveSckohdHKKQRkSgLzFFeMP8tThqbXnxrW8nw/LloUnF4gKTfp70L8M7k7ExkiCvh2qXQRhZYfSxPdWpZP8z3PDS82oLJlWDg2GoB2edrSl7WHJ1Zh0IxY2qAVSXDdMe/DIjCk8odWgIBcJESITrUUQfRraR2rqMGctFfdhS3em6zFKV04NSVWWJbfCrer1XCWogp/lo5hwEYKXAyj2NP70zCsE4YU8xoN7u6WbCOVxmDt+kZgYVRpkTaSTqTE8F+qIpsrgrTuoO/30fzEWXLeBZwZY8F5liBEO9HvnbmQ/ym4KngywC/IJsdj3k4v1+D3zl5ZUpXiCV7uxxjgeZnV+C4I7IZeU25uOSi/oUlJIjTSwin/cOHFh9EBjtCM0onXDA19ZCSmTfDkyhCvOSUM3fdsCnz/TftDHFO7XAwbYUP9EFnlNFOnMBfmLawZYFyqWbBK6Www4E6bKRAo/Jh0HecIPgoZnAh/6/xLU874nX3ZQ82XXUpuGyc4sNCc2eYqnTCoZ3IcCXTaD9cZgMPjAViLmj+LVUwoksdMAYJwy6lNWqnv03v10KBzP0="
+      on:
+        distributions: sdist bdist_wheel
+        repo: dogebuild/dogebuild-protobuf

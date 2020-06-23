@@ -1,0 +1,7 @@
+site_name: Dogebuild protobuf plugin
+theme: readthedocs
+markdown_extensions:
+  - toc:
+      permalink: True
+nav:
+  - Quick start: index.md

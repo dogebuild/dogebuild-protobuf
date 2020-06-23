@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package integration_tests;
+
+message Dependency {
+    string value = 1;
+}
