@@ -19,7 +19,8 @@ FLAKE8_IGNORE = [
 
 @nox.session()
 @nox.parametrize(
-    "directory", ["cpp_proto", "cpp_proto_with_dependency/main", "grpc_service"],
+    "directory",
+    ["simple_proto", "proto_with_dependency/main", "proto_with_dependency_and_docker/main", "grpc_service"],
 )
 @nox.parametrize("doge_version", ["0.3.2"])
 def tests(session, directory, doge_version):

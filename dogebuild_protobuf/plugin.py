@@ -3,6 +3,7 @@ from typing import List, Union, Iterable
 from pathlib import Path
 from shutil import rmtree
 from enum import Enum
+from os import getcwd, getuid, getgid
 
 from dogebuild.plugins import DogePlugin
 from dogebuild.well_known_artifacts import (
@@ -35,17 +36,50 @@ class SupportedLanguage(Enum):
         self.artifact = artifact
 
 
+class ProtocBinary:
+    def get_command(self, *touched_directories: Path) -> List[str]:
+        raise NotImplementedError()
+
+
+class SystemProtocBinary(ProtocBinary):
+    def get_command(self, *touched_directories: Path) -> List[str]:
+        return ["protoc"]
+
+
+class DockerProtocBinary(ProtocBinary):
+    def __init__(self, image: str, version: str = "latest"):
+        self.image = image
+        self.version = version
+
+    def get_command(self, *touched_directories: Path) -> List[str]:
+        command = ["docker", "run", "--rm", "--user", f"{getuid()}:{getgid()}"]
+        for d in touched_directories:
+            command.append("-v")
+            command.append(f"{d}:{d}")
+        command.append("-v")
+        command.append(getcwd())
+        command.append("-w")
+        command.append(getcwd())
+        command.append(f"{self.image}:{self.version}")
+
+        return command
+
+
 class ProtobufPlugin(DogePlugin):
     NAME = "protobuf-plugin"
 
     def __init__(
-        self, src: Iterable[Union[Path, str]], src_dir: Union[Path, str] = "src", build_dir: Path = Path("build"),
+        self,
+        src: Iterable[Union[Path, str]],
+        src_dir: Union[Path, str] = "src",
+        build_dir: Path = Path("build"),
+        protoc_binary: ProtocBinary = SystemProtocBinary(),
     ):
         super(ProtobufPlugin, self).__init__(
             artifacts_to_publish=[PROTO_SOURCES_DIRECTORY,]
         )
 
-        self.protoc = "protoc"
+        self.protoc_binary = protoc_binary
         self.proto_sources = list(map(lambda s: str(Path(s).resolve()), src))
         self.src_dir = Path(src_dir).resolve()
         self.build_dir = build_dir.resolve()
@@ -68,7 +102,7 @@ class ProtobufPlugin(DogePlugin):
         lang_dir.mkdir(exist_ok=True, parents=True)
         run(
             [
-                self.protoc,
+                *self.protoc_binary.get_command(*proto_sources_directory, lang_dir),
                 *map(lambda d: f"-I{d}", proto_sources_directory),
                 lang.param,
                 f"{lang_dir}",
