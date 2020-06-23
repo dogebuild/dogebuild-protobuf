@@ -6,6 +6,7 @@ python:
 - '3.8'
 before_install:
 - ./scripts/install-protobuf.sh
+- export PATH=$PATH:$PWD/bin/
 install:
 - python setup.py install
 before_script:
