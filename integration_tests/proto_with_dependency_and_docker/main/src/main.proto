@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package integration_tests;
+
+import "dependency.proto";
+
+message Main {
+    Dependency value = 1;
+}
